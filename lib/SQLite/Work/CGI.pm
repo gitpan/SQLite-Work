@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.02> of SQLite::Work::CGI.
+This describes version B<0.0202> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.0202';
 
 =head1 SYNOPSIS
 
@@ -1200,10 +1200,10 @@ sub make_edit_table {
 	    my @colwords = split('_', $nicecol);
 	    foreach my $cw (@colwords)
 	    {
-		$cw = $self->convert_value(value=>$cw,
+		$cw = $self->{_tobj}->convert_value(value=>$cw,
 		    format=>"trunc${truncate_colnames}",
 		    name=>$columns[$ci]);
-		$cw = $self->convert_value(value=>$cw,
+		$cw = $self->{_tobj}->convert_value(value=>$cw,
 		    format=>'proper',
 		    name=>$columns[$ci]);
 	    }
@@ -1212,7 +1212,7 @@ sub make_edit_table {
 	else
 	{
 	    $nicecol =~ s/_/ /g;
-	    $nicecol = $self->convert_value(value=>$nicecol,
+	    $nicecol = $self->{_tobj}->convert_value(value=>$nicecol,
 		format=>'proper',
 		name=>$columns[$ci]);
 	}

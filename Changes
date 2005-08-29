@@ -1,6 +1,19 @@
 Revision history for SQLite-Work
 ================================
 
+0.0202 Mon 29 August 2005
+-------------------------
+
+  * (29 Aug 2005) manifest bug
+  	Left out some files from the MANIFEST, oops
+
+0.0201 Mon 29 August 2005
+-------------------------
+
+  * (29 Aug 2005) fix bug with editing
+  	An oops moment; forgot to integrate the template stuff
+  for make_edit_table in SQLite::Work::CGI.
+
 0.02 Mon 29 August 2005
 -----------------------
 
