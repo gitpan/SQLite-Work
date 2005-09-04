@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.0202> of SQLite::Work.
+This describes version B<0.03> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.0202';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -261,6 +261,7 @@ sub do_disconnect {
 	sort_by=>\@sort_by,
 	sort_reversed=>\%sort_reversed,
 	show=>\@show,
+	distinct=>0,
 	headers=>\@headers,
 	groups=>\@groups,
 	limit=>$limit,
@@ -280,6 +281,12 @@ report.
 Arguments are as follows (in alphabetical order):
 
 =over
+
+=item distinct
+
+If columns are given to show (see L<show>), then this will
+ensure that rows with exactly the same values will not be
+repeated.
 
 =item groups
 
@@ -470,8 +477,8 @@ truncated to that number of characters.
 =item where
 
 A hash containing selection criteria.  The keys are the column names
-and the values are strings suitable for using in a LIKE condition;
-that is, '%' is a multi-character wildcard, and '_' is a
+and the values are strings suitable for using in a GLOB condition;
+that is, '*' is a multi-character wildcard, and '?' is a
 single-character wildcard.  All the conditions will be ANDed together.
 
 Yes, this is limited and doesn't use the full power of SQL, but it's
@@ -761,6 +768,7 @@ sub do_split_report {
 	report_style=>'full',
 	title=>'',
 	verbose=>0,
+	debug=>0,
 	@_
     );
     
@@ -815,6 +823,7 @@ sub do_split_report {
 					{$args{table}}->{$split_col},
 					name=>$split_col)
 	    if ($self->{default_format}->{$args{table}}->{$split_col});
+	warn "val=$val, niceval=$niceval\n" if $args{debug};
 
 	my $valbase = $self->{_tobj}->convert_value(value=>$niceval,
 	    format=>'namedalpha', name=>$split_col);
@@ -867,7 +876,7 @@ sub do_split_report {
 	if ($val and $args{split_alpha})
 	{
 	    # starts with the value
-	    $where{$split_col} = $val . '%';
+	    $where{$split_col} = $val . '*';
 	}
 	else
 	{
@@ -1209,6 +1218,98 @@ sub delete_one_row {
 
 } # delete_one_row
 
+=head2 do_import_fv
+
+    if ($rep->do_import_fv(
+	table=>$table,
+	datafile=>$filename,
+	row_delim=>"=")) { ...
+    }
+
+Import a field:value file into the given table.
+Field names are taken from the table; rows not starting
+with a field name "Field:" are taken to be a continuation
+of the previous field value.
+
+Rows are delimited by the given row_delim argument on a line
+by itself.
+
+Returns the number of records imported.
+
+=cut
+sub do_import_fv {
+    my $self = shift;
+    my %args = (
+	table=>'',
+	datafile=>'',
+	row_delim=>"=",
+	@_
+    );
+
+    my $table = $args{table};
+    my $row_delim = $args{row_delim};
+    my $datafile = $args{datafile};
+
+    if (!-r $datafile)
+    {
+	warn "cannot read $datafile";
+	return 0;
+    }
+    my $fh;
+    open($fh, $datafile)
+	or die "cannot open $datafile";
+
+    my $count = 0;
+    # get the legal column names
+    my @columns = $self->get_colnames($table,
+	do_rowid=>0);
+    my %legal_cols = ();
+    foreach my $col (@columns)
+    {
+	$legal_cols{$col} = 1;
+    }
+
+    my %vals = ();
+    my $cur_field;
+    while (<$fh>)
+    {
+	chomp;
+	if (/^$row_delim$/)
+	{
+	    if (!$self->add_one_row(table=>$table,
+				  add_values=>\%vals))
+	    {
+		warn "failed to add row -- aborting\n";
+		return 0;
+	    }
+	    $count++;
+	    %vals = ();
+	}
+	elsif (/^(\w+):(.*)/)
+	{
+	    my $fn = $1;
+	    my $v1 = $2;
+	    if ($legal_cols{$fn})
+	    {
+		# is a new value
+		$cur_field = $fn;
+		$vals{$cur_field} = $v1;
+	    }
+	    else
+	    {
+		# is continuation
+		$vals{$cur_field} .= "\n$_";
+	    }
+	}
+	else
+	{
+	    $vals{$cur_field} .= "\n$_";
+	}
+    }
+    return $count;
+
+} # do_import_fv
+
 =head1 Helper Methods
 
 Lower-level methods, generally just called from other methods,
@@ -1262,6 +1363,7 @@ sub make_selections {
 	not_where=>{},
 	where=>{},
 	show=>[],
+	distinct=>0,
 	layout=>'table',
 	row_template=>'',
 	outfile=>'',
@@ -1297,6 +1399,7 @@ sub make_selections {
     my $query = "SELECT ";
     if (@columns)
     {
+	$query .= "DISTINCT " if $args{distinct};
 	$query .= join(", ", @columns);
     }
     else
@@ -2301,11 +2404,11 @@ sub build_where_conditions {
 	{
 	    if ($args{not_where}->{$col})
 	    {
-		push @where, "$col NOT LIKE " . $self->{dbh}->quote($val);
+		push @where, "$col NOT GLOB " . $self->{dbh}->quote($val);
 	    }
 	    else
 	    {
-		push @where, "$col LIKE " . $self->{dbh}->quote($val);
+		push @where, "$col GLOB " . $self->{dbh}->quote($val);
 	    }
 	}
     }

@@ -1,6 +1,23 @@
 Revision history for SQLite-Work
 ================================
 
+0.03 Sun 04 September 2005
+--------------------------
+
+  * (4 Sep 2005) removed old import script
+
+  * (3 Sep 2005) distinct
+  	Added the 'distinct' option, which adds the DISTINCT keyword
+  to the selection.  This is active in the sqlreport script, but haven't
+  added it to the CGI selection form.
+
+  * (3 Sep 2005) LIKE to GLOB
+  	Change LIKE to GLOB in the search stuff; this means that
+  wildcards are now '*' and '?' not '%' and '_'.  Also now case-sensitive.
+  	Also did a quick tweak of some import stuff.
+
+  * (31 Aug 2005) import script
+
 0.0202 Mon 29 August 2005
 -------------------------
 

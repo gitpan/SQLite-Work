@@ -22,7 +22,7 @@ my $builder = Module::Build->new(
         'Test::More' => 0,
     },
 #    add_to_cleanup      => [ 'SQLite-Work-*' ],
-    script_files => [qw(scripts/sqlreport scripts/sqlw_mail scripts/fv2sqlite)],
+    script_files => [qw(scripts/sqlreport scripts/sqlw_mail scripts/sqlw_import)],
 
 );
 

@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.0202> of SQLite::Work::CGI.
+This describes version B<0.03> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.0202';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -647,8 +647,8 @@ sub make_search_form {
 </p>
 <table border="0">
 <tr><td>
-<p>Match by column: use <b>%</b> as a wildcard match,
-and the <b>_</b> character to match
+<p>Match by column: use <b>*</b> as a wildcard match,
+and the <b>?</b> character to match
 any <em>single</em> character.
 Click on the "NOT" checkbox to negate a match.
 </p>

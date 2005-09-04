@@ -14,7 +14,7 @@ lib/SQLite/Work/Template.pm
 lib/SQLite/Work/Mail.pm
 scripts/sqlreport
 scripts/sqlw_mail
-scripts/fv2sqlite
+scripts/sqlw_import
 t/00_dist.t
 t/01_load.t
 t/20tfiles.t
