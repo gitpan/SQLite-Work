@@ -10,11 +10,11 @@ sqlreport - make reports on a table in an SQLite database
 
 =head1 VERSION
 
-This describes version B<0.03> of sqlreport.
+This describes version B<0.04> of sqlreport.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -30,8 +30,9 @@ sqlreport [ --all_pages ] --database I<database_file>
 { --sort_by I<colname> } { --sort_reversed I<colname>=1 }
 [ --split_col I<colname> [ --split_alpha I<number> ] ]
 --table I<table> [ --table_border I<number> ]
+[ -- table_header I<string> ]
 [ --title I<string> ] [ --total ] [ --truncate_colnames I<number> ]
-{ --where I<colname>=I<string> }
+{ --use_package I<pkgname> } { --where I<colname>=I<string> }
 
 =head1 DESCRIPTION
 
@@ -283,6 +284,17 @@ The table to report on. (required)
 For fine-tuning the L<report_style>; if the L<layout> is 'table',
 then this overrides the default border-size of the table.
 
+=item --table_header
+
+When the report layout is 'table' and the report_style is not 'bare',
+then this argument can be used to customize the table-header
+of the report table.  This must either contain the contents
+of the table-header, or the name of a file which contains
+the contents of the table-header.
+
+If this argument is not given, the table-header will be constructed
+from the column names of the columns to be shown.
+
 =item --title
 
 The title of the report; if this is empty, a title will be generated.
@@ -316,6 +328,14 @@ single-character wildcard.  All the conditions will be ANDed together.
 
 Yes, this is limited and doesn't use the full power of SQL, but it's
 useful enough for most purposes.
+
+=item --use_package
+
+An array of package names of packages to "use".
+This is mainly so that the {&funcname())} construct of
+the templates (see L<SQLite::Work::Template>) can call
+functions within these packages (using their fully-qualified
+names).
 
 =back
 
@@ -386,6 +406,7 @@ sub process_args ($) {
 	       'page=i',
 	       'report_style=s',
 	       'table_border=i',
+	       'table_header=s',
 	       'truncate_colnames=i',
 	       'layout=s',
 	       'row_template=s',
@@ -396,6 +417,7 @@ sub process_args ($) {
 	       'total!',
 	       'split_col=s',
 	       'split_alpha=n',
+	       'use_package=s@',
 	      ) or pod2usage(2);
 
     if ($data_ref->{'manpage'})
@@ -407,7 +429,7 @@ sub process_args ($) {
     }
     # set the parameters for 'new'
     $data_ref->{new_params} = {};
-    foreach my $key (qw(database row_ids report_template))
+    foreach my $key (qw(database row_ids report_template use_package))
     {
 	if (exists $data_ref->{args}->{$key})
 	{
@@ -443,7 +465,7 @@ sub process_args ($) {
 
     # set the parameters for 'report'
     $data_ref->{report_params} = {};
-    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed show headers groups limit page report_style layout table_border truncate_colnames row_template outfile split_col split_alpha debug))
+    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed show headers groups limit page report_style layout table_border table_header truncate_colnames row_template outfile split_col split_alpha debug))
     {
 	if (exists $data_ref->{args}->{$key})
 	{

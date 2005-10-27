@@ -1,6 +1,24 @@
 Revision history for SQLite-Work
 ================================
 
+0.04 Fri 09 September 2005
+--------------------------
+
+  * (9 Sep 2005) call function in template
+  	Added ability to call a function from a template, with the
+  {&funcname(args...)} construct.  If using a function from another
+  package, use the 'use_package' argument to use that package.
+
+  * (7 Sep 2005) tweaks to formatting
+  	Titles now include "An" as well as "A" and "The".
+  	Removed _underline_ formatting in the 'html' format style
+  because it's too easy to mess up filenames with it.
+
+  * (7 Sep 2005) table_header
+  	Added the ability to customize the thead of the table when
+  doing a report with a table layout.  It's up to the user to make
+  sure that it matches the row_template being used.
+
 0.03 Sun 04 September 2005
 --------------------------
 

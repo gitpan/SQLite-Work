@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.03> of SQLite::Work.
+This describes version B<0.04> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -88,6 +88,7 @@ my $rep = SQLite::Work->new(
 		'series_title'=>'title',
 	    }
 	},
+    use_package=>[qw(File::Basename MyPackage)],
     );
 
 Make a new report object.
@@ -160,6 +161,14 @@ row_template has not been given.
 This is useful for things like CGI scripts where it isn't
 possible to know beforehand what sort of row_template is needed.
 
+=item use_package
+
+This contains an array of package names of packages to "use".
+This is mainly so that the {&funcname())} construct of
+the templates (see L<SQLite::Work::Template>) can call
+functions within these packages (using their fully-qualified
+names).
+
 =back
 
 =cut
@@ -201,6 +210,14 @@ EOT
 EOT
 
     # make the template object
+    if ($parameters{use_package})
+    {
+	for my $pkg (@{$parameters{use_package}})
+	{
+	    eval "use $pkg" if $pkg;
+	    die "invalid use $pkg: $@" if $@;
+	}
+    }
     $self->{_tobj} = SQLite::Work::Template->new();
 
     return ($self);
@@ -461,6 +478,17 @@ This is only really useful when doing editing with a CGI script.
 
 For fine-tuning the L<report_style>; if the L<layout> is 'table',
 then this overrides the default border-size of the table.
+
+=item table_header
+
+When the report layout is 'table' and the report_style is not 'bare',
+then this argument can be used to customize the table-header
+of the report table.  This must either contain the contents
+of the table-header, or the name of a file which contains
+the contents of the table-header.
+
+If this argument is not given, the table-header will be constructed
+from the column names of the columns to be shown.
 
 =item title
 
@@ -1920,6 +1948,7 @@ $my report = $self->format_report(
 	layout=>'table',
 	row_template=>$row_template,
 	report_style=>'compact',
+	table_header=>$thead,
 	table_border=>1,
 	truncate_colnames=>0,
     );
@@ -1936,6 +1965,7 @@ sub format_report {
 	layout=>'table',
 	row_template=>'',
 	report_style=>'full',
+	table_header=>'',
 	@_
     );
     my @columns = @{$args{columns}};
@@ -2049,6 +2079,20 @@ sub format_report {
 	columns=>\@columns,
 	show_cols=>\%show_cols,
 	nice_cols=>\%nice_cols);
+    my $thead = $self->get_template($args{table_header});
+    if (%nice_cols and !$thead)
+    {
+	$thead .= '<thead><tr>';
+	foreach my $col (@columns)
+	{
+	    if ($show_cols{$col})
+	    {
+		my $nicecol = $nice_cols{$col};
+		$thead .= "<th>$nicecol</th>";
+	    }
+	}
+	$thead .= "</tr></thead>\n";
+    }
 
     my $page = ($args{num_pages} > 1 ? $args{page} : 0);
     # process the rows
@@ -2094,16 +2138,7 @@ sub format_report {
 	    if ($report_style ne 'bare'
 		and $args{layout} eq 'table')
 	    {
-		push @out, '<thead><tr>';
-		foreach my $col (@columns)
-		{
-		    if ($show_cols{$col})
-		    {
-			my $nicecol = $nice_cols{$col};
-			push @out, "<th>$nicecol</th>";
-		    }
-		}
-		push @out, "</tr></thead>\n";
+		push @out, $thead;
 	    }
 	    $new_section = 0;
 	}

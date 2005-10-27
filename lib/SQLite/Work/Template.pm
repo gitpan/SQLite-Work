@@ -8,11 +8,11 @@ SQLite::Work::Template - template stuff for SQLite::Work
 
 =head1 VERSION
 
-This describes version B<0.03> of SQLite::Work::Template.
+This describes version B<0.04> of SQLite::Work::Template.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
@@ -56,6 +56,18 @@ will display "stuff value-of-column more stuff"; otherwise it displays
 This version can likewise use multiple columns in its display parts.
 
     {?col1 stuff [$col1] thing [$col2]!![$col3]}
+
+=item {&funcname(arg1,...,argN)}
+
+Call a function with the given args; the return value of the
+function will be what is put in its place.
+
+    {&MyPackage::myfunc(stuff,[$col1])}
+
+This would call the function myfunc in the package MyPackage, with the
+arguments "stuff", and the value of col1.  The package MyPackage should
+be activated by using the 'use_package' argument in L<SQLite::Work>
+(or in the L<sqlreport> script).
 
 =back
 
@@ -162,6 +174,17 @@ sub fill_in {
 	else # no value, return nothing
 	{
 	    return '';
+	}
+    }
+    elsif ($targ =~ /^\&([\w:]+)\((.*)\)$/)
+    {
+	# function
+	my $func_name = $1;
+	my $fargs = $2;
+	$fargs =~ s/\[(\$[^\]]+)\]/$self->fill_in(row_hash=>$args{row_hash},show_cols=>$args{show_cols},targ=>$1)/eg;
+	{
+	    no strict('refs');
+	    return &{$func_name}(split(/,/,$fargs));
 	}
     }
     return '';
@@ -343,7 +366,7 @@ sub convert_value {
 	};
 	/^html/i &&	 (return $self->simple_html($value));
 	/^title/i && do {
-	    $value =~ s/(.*)[,;]\s*(A|The)$/$2 $1/;
+	    $value =~ s/(.*)[,;]\s*(A|An|The)$/$2 $1/;
 	    return $value;
 	};
 	/^comma_front/i && do {
@@ -445,10 +468,56 @@ sub simple_html {
     $value =~ s#\s*\n\s*\n#<br/><br/>\n#sg;
     $value =~ s#\*([^*]+)\*#<i>$1</i>#sg;
     $value =~ s/\^([^^]+)\^/<b>$1<\/b>/sg;
-    $value =~ s/\#([^#]+)\#/<b>$1<\/b>/sg;
-    $value =~ s/_([^_]+)_/<u>$1<\/u>/sg;
+    $value =~ s/\#([^#<>]+)\#/<b>$1<\/b>/sg;
     return $value;
 } # simple_html
+
+=head1 Callable Functions
+
+=head2 safe_backtick
+
+{&safe_backtick(myprog,arg1,arg2...argN)}
+
+Return the results of a program, without risking evil shell calls.
+This requires that the program and the arguments to that program
+be given separately.
+
+=cut
+sub safe_backtick {
+    my @prog_and_args = @_;
+    my $progname = $prog_and_args[0];
+
+    # if they didn't give us anything, return
+    if (!$progname)
+    {
+	return '';
+    }
+    # call the program
+    # do a fork and exec with an open;
+    # this should preserve the environment and also be safe
+    my $result = '';
+    my $fh;
+    my $pid = open($fh, "-|");
+    if ($pid) # parent
+    {
+	{
+	    # slurp up the result all at once
+	    local $/ = undef;
+	    $result = <$fh>;
+	}
+	close($fh) || warn "$progname program script exited $?";
+    }
+    else # child
+    {
+	# call the program
+	# force exec to use an indirect object,
+	# so that evil shell stuff will die, even
+	# for a program with no arguments
+	exec { $progname } @prog_and_args or die "$progname failed: $!\n";
+	# NOTREACHED
+    }
+    return $result;
+} # safe_backtick
 
 =head1 REQUIRES
 

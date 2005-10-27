@@ -10,11 +10,11 @@ sqlw_import - import a Field:Value datafile into an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.03> of sqlw_import.
+This describes version B<0.04> of sqlw_import.
 
 =cut
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 =head1 SYNOPSIS
 
