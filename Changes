@@ -1,6 +1,17 @@
 Revision history for SQLite-Work
 ================================
 
+0.05 Sat 01 April 2006
+----------------------
+
+  * (1 Apr 2006) working with Embperl
+  	Made various changes to make the SQLite::Work::CGI module
+  play nicely with Embperl, such as being able to pass back strings
+  rather than impatiently print things out itself.
+
+  * (11 Sep 2005) edit tweaks
+  	Added an "Add Row" button to the main edit form.
+
 0.04 Fri 09 September 2005
 --------------------------
 

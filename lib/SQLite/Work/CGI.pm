@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.04> of SQLite::Work::CGI.
+This describes version B<0.05> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -144,7 +144,8 @@ sub new {
 
 =head2 do_select
 
-$obj->do_select($table, $command);
+$obj->do_select($table,
+    command=>'Search');
 
 Select data from a table in the database.
 Uses CGI to get most of the parameters.
@@ -156,7 +157,12 @@ then the result generated has edit fields and buttons in it.
 sub do_select {
     my $self = shift;
     my $table = shift;
-    my $command = (@_ ? shift : 'Search');
+    my %args = (
+	command=>'Search',
+	outfile=>'-',
+	@_
+    );
+    my $command = $args{command};
 
     my $where_prefix = $self->{where_prefix};
     my $not_prefix = $self->{not_prefix};
@@ -285,7 +291,7 @@ sub do_select {
 	    ? $self->{cgi}->param('ReportStyle') : 'compact'),
 	layout=>($self->{cgi}->param('ReportLayout')
 		 ? $self->{cgi}->param('ReportLayout') : 'table'),
-	outfile=>'-',
+	outfile=>$args{outfile},
     );
 
 } # do_select
@@ -455,12 +461,14 @@ sub do_single_delete {
     
 } # do_single_delete
 
-=head2 do_search_form
+=head2 make_search_form
 
-Display the search form for the given table.
+Create the search form for the given table.
+
+my $form = $obj->make_search_form($table, %args);
 
 =cut
-sub do_search_form {
+sub make_search_form {
     my $self = shift;
     my $table = shift;
     my %args = (
@@ -487,7 +495,7 @@ sub do_search_form {
 	$template = $self->{report_template};
     }
     # generate the search form
-    my $form = $self->make_search_form($table,
+    my $form = $self->search_form($table,
 	command=>$args{command},
 	table2=>$table2);
     my $title = $args{command} . ' ' . $table;
@@ -497,6 +505,20 @@ sub do_search_form {
     my $out = $template;
     $out =~ s/<!--sqlr_title-->/$title/g;
     $out =~ s/<!--sqlr_contents-->/$form/g;
+    return $out;
+
+} # make_search_form
+
+=head2 do_search_form
+
+Display the search form for the given table.
+
+=cut
+sub do_search_form {
+    my $self = shift;
+    
+    my $out = $self->make_search_form(@_);
+
     # Now print the page for the user to see...
     print "Content-Type: text/html\n";
     print "\n";
@@ -504,12 +526,12 @@ sub do_search_form {
 
 } # do_search_form
 
-=head2 do_table_form
+=head2 make_table_form
 
-Display the table selection form.
+Make the table selection form.
 
 =cut
-sub do_table_form {
+sub make_table_form {
     my $self = shift;
     my $command = (@_ ? shift : '');
 
@@ -555,6 +577,21 @@ EOT
     my $out = $template;
     $out =~ s/<!--sqlr_title-->/$title/g;
     $out =~ s/<!--sqlr_contents-->/$form/g;
+
+    return $out;
+
+} # make_table_form
+
+=head2 do_table_form
+
+Display the table selection form.
+
+=cut
+sub do_table_form {
+    my $self = shift;
+    
+    my $out = $self->make_table_form(@_);
+
     # Now print the page for the user to see...
     print "Content-Type: text/html\n";
     print "\n";
@@ -616,12 +653,12 @@ sub print_message {
     print $out;
 } # print_message
 
-=head2 make_search_form
+=head2 search_form
 
 Construct a search-a-table form
 
 =cut
-sub make_search_form {
+sub search_form {
     my $self = shift;
     my $table = shift;
     my %args = (
@@ -643,6 +680,14 @@ sub make_search_form {
 <form action="$action" method="get">
 <p>
 <strong><input type="submit" name="$command" value="$command"/> <input type="reset"/></strong>
+EOT
+    if ($command eq 'Edit')
+    {
+	$out_str .=<<EOT;
+<input type="submit" name="Add_Row" value="Add Row"/>
+EOT
+    }
+    $out_str .=<<EOT;
 <input type="hidden" name="Table" value="$table"/>
 </p>
 <table border="0">
@@ -739,21 +784,24 @@ EOT
 </select>
 </p>
 EOT
-    $out_str .=<<EOT;
+    my @tables = $self->get_tables();
+    if (@tables > 1)
+    {
+	$out_str .=<<EOT;
 <p><strong>Table #2</strong>
 <br/><input type='radio' name='Table2' checked='true' value=''>NONE</input>
 EOT
-    my @tables = $self->get_tables();
-    foreach my $tn (@tables)
-    {
-	if ($tn ne $table)
+	foreach my $tn (@tables)
 	{
-	    $out_str .= "<br/><input type='radio' name='Table2' value='$tn'>$tn</input>\n";
+	    if ($tn ne $table)
+	    {
+		$out_str .= "<br/><input type='radio' name='Table2' value='$tn'>$tn</input>\n";
+	    }
 	}
+	$out_str .= "</p>\n";
     }
 
     $out_str .=<<EOT;
-</p>
 </td></tr></table>
 <table border="0">
 <tr><td>
@@ -788,7 +836,14 @@ EOT
 EOT
     if ($command eq 'Search')
     {
-	$out_str .= "<p>";
+	$out_str .=<<EOT;
+<p><strong>Headers:</strong>
+Indicate which columns you wish to be in headers by giving
+the columns in template form; for example:<br/>
+{\$Col1} {\$Col2}<br/>
+means that the header contains columns <em>Col1</em> and <em>Col2</em>.
+<br/>
+EOT
 	for (my $i=1; $i <= $self->{max_headers}; $i++)
 	{
 	    $out_str .=<<EOT
@@ -803,11 +858,19 @@ EOT
 </td></tr>
 </table>
 <p><strong><input type="submit" name="$command" value="$command"/> <input type="reset"/></strong>
+EOT
+    if ($command eq 'Edit')
+    {
+	$out_str .=<<EOT;
+<input type="submit" name="Add_Row" value="Add Row"/>
+EOT
+    }
+    $out_str .=<<EOT;
 </p>
 </form>
 EOT
     return $out_str;
-} # make_search_form
+} # search_form
 
 =head2 make_add_form
 
@@ -1088,10 +1151,22 @@ EOT
     my $out = $template;
     $out =~ s/<!--sqlr_title-->/$title/g;
     $out =~ s/<!--sqlr_contents-->/$contents/g;
-    # Now print the page for the user to see...
-    print "Content-Type: text/html\n";
-    print "\n";
-    print $out;
+    # if we're given an outfile, print to that
+    if ($args{outfile})
+    {
+	my $fh;
+	open($fh, ">", $args{outfile})
+	    or die "Could not open $args{outfile} for writing";
+	print $fh $out;
+	close($fh);
+    }
+    else
+    {
+	# Now print the page for the user to see...
+	print "Content-Type: text/html\n";
+	print "\n";
+	print $out;
+    }
 } # print_select
 
 =head2 format_report
@@ -1178,7 +1253,7 @@ sub make_edit_table {
     my @out = ();
     my $count = 0;
     my $row_id_name = $self->get_id_colname($table);
-    my $row_id_ind;
+    my $row_id_ind = -1;
     my $url = $self->{cgi}->url();
     # by default, show all columns
     my @show_cols = ();
@@ -1314,9 +1389,11 @@ EOT
 		$new_table = 0;
 	    }
 	    push @out, "<tr>";
-	    my $row_id_val = $row[$row_id_ind];
+	    my $row_id_val = 'UNKNOWN';
+	    $row_id_val = $row[$row_id_ind] if ($row_id_ind >= 0);
 	    push @out,<<EOT;
 <td><input type="submit" name="Edit_Row" value="Edit Row $row_id_val"/>
+<!-- row_id_ind=$row_id_ind -->
 <input type="submit" name="Add_Row" value="Add Row"/>
 <input type="submit" name="Delete_Row" value="Delete Row $row_id_val"/>
 </td>

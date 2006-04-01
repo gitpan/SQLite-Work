@@ -88,12 +88,12 @@ MAIN: {
 	    elsif ($tvdb->{cgi}->param('Edit'))
 	    {
 		$tvdb->do_select($tvdb->{cgi}->param('Table'),
-		    'Edit');
+		    command=>'Edit');
 	    }
 	    elsif ($tvdb->{cgi}->param('Edit_Row'))
 	    {
 		$tvdb->do_select($tvdb->{cgi}->param('Table'),
-		    'Edit');
+		    command=>'Edit');
 	    }
 	    elsif ($tvdb->{cgi}->param('Update'))
 	    {

@@ -4,15 +4,15 @@ use warnings;
 
 =head1 NAME
 
-SQLite::Work::Template - template stuff for SQLite::Work
+SQLite::Work::Template - template stuff for SQLite::Work.
 
 =head1 VERSION
 
-This describes version B<0.04> of SQLite::Work::Template.
+This describes version B<0.05> of SQLite::Work::Template.
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -35,6 +35,11 @@ The format is as follows:
 
 A variable; will display the value of the column, or nothing if
 that value is empty.
+
+=item {$colname:format}
+
+A formatted variable; will apply the formatting directive(s) to
+the value before displaying it.
 
 =item {?colname stuff [$colname] more stuff}
 
@@ -70,6 +75,72 @@ be activated by using the 'use_package' argument in L<SQLite::Work>
 (or in the L<sqlreport> script).
 
 =back
+
+=head2 Limitations
+
+=over
+
+=item *
+
+One cannot escape '{' '}' '[' or ']' characters.  However, the substitution
+is clever enough so that you may be able to use them inside conditional
+constructs, provided the use does not resemble a variable.
+
+For example, to get a value surrounded by {}, the following
+will not work:
+
+{{$Col1}}
+
+However, this will:
+
+{?Col1 {[$Col1]}}
+
+=item *
+
+One cannot have nested variables.
+
+=item *
+
+Conditionals are limited to testing whether or not the variable
+has a value.  If you want more elaborate tests, or tests on more
+than one value, you'll have to write a function to do it, and
+use the {&function()} construct.
+
+=back
+
+=head2 Justification For Existence
+
+When I was writing SQLite::Work, I originally tried using L<Text::Template>
+(my favourite template engine) and also tried L<Text::FillIn>.  Both
+of them had some lovely, powerful features.  Unfortunately, they were
+also relatively slow.  In testing them with a 700-row table, using
+Text::Template took about 15 seconds to generate the report, and using
+Text::FillIn took 45 seconds!  Rolling my own very simple template
+engine cut the time down to about 7 seconds.
+
+The reasons for this aren't that surprising.  Because Text::Template
+is basically an embedded Perl engine, it has to run the interpreter
+on each substitution.  And Text::FillIn has a lot to do, what with being
+very generic and very recursive.
+
+The trade-off for the speed-gain of SQLite::Work::Template is that
+it is quite simple.  There is no nesting or recursion, there are
+no loops.  But I do think I've managed to grab some of the nicer features
+of other template engines, such as limited conditionals, and formatting,
+and, the most powerful of all, calling external functions.
+
+=head1 FORMATTING
+
+As well as simple substitution, this module can apply formatting
+to values before they are displayed.
+
+For example:
+
+{$Money:dollars}
+
+will give the value of the I<Money> column formatted as a dollar value.
+
+See L</convert_value> for details of all the formatting directives.
 
 =cut
 
@@ -282,11 +353,12 @@ Show as if the value is a percentage.
 
 =item title
 
-Put any trailing ,The or ,A at the front (as this is a title)
+Put any trailing ",The" ",A" or ",An" at the front (as this is a title)
 
 =item comma_front
 
 Put anything after the last comma at the front (as with an author name)
+For example, "Smith,Sarah Jane" becomes "Sarah Jane Smith".
 
 =item month
 
@@ -294,7 +366,9 @@ Convert the number value to a month name.
 
 =item nth
 
-Convert the number value to a N-th value.
+Convert the number value to a N-th value.  Numbers ending with 1 have 'st'
+appended, 2 have 'nd' appended, 3 have 'rd' appended, and everything
+else has 'th' appended.
 
 =item url
 
@@ -307,7 +381,8 @@ Convert to a HTML mailto link.
 =item hmail
 
 Convert to a "humanized" version of the email, with the @ and '.'
-replaced with "at" and "dot"
+replaced with "at" and "dot".  This is useful to prevent spambots
+harvesting email addresses.
 
 =item html
 

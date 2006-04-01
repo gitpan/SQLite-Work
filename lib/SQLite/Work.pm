@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.04> of SQLite::Work.
+This describes version B<0.05> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 =head1 SYNOPSIS
 
@@ -39,20 +39,103 @@ our $VERSION = '0.04';
 
 =head1 DESCRIPTION
 
+SQLite::Work is a perl module for interfacing with an SQLite database.
+It can be used to:
+
+=over
+
+=item *
+
+generate I<nice> HTML (and non-HTML) reports, which
+
+=over
+
+=item *
+
+have nested headers
+
+=item *
+
+have grouped data which clusters under the headers
+
+=item *
+
+can be sorted on multiple columns
+
+=item *
+
+can be customized with templates (both headers and body) which include
+some simple formatting for column values, for example:
+
+    simple HTMLize
+    titles (Title,The becomes The Title)
+    names (Nurk,Fred becomes Fred Nurk)
+    month names
+    truncation
+
+(see L<SQLite::Work::Template>)
+
+=item *
+
+one can select the columns and their order even if one isn't using templates
+
+=item *
+
+default templates can be selected which present the data in tables,
+in paragraphs (Column:Value) or in lists.
+
+=item *
+
+can be split into multiple HTML pages, with automatic index-page
+generation; the split can be on the values of a given column, and/or by
+number of rows
+
+=back
+
+=item *
+
+use a generic search CGI script ("show.cgi" using SQLite::Work::CGI) which
+
+=over
+ 
+=item *
+
+can search on all the fields in a table without having to hardcode the
+column names (it just gets them from the table information)
+
+=item *
+
+uses most of the power of the report engine to give I<nice> search
+results
+
+=back
+
+=item *
+
+update the database with a CGI script ("edit.cgi" using SQLite::Work::CGI)
+
+=item *
+
+be able to mail reports to general addresses (such as a mailing list)
+or to specific addresses (such as sending notifications to individuals
+whose address is in the database). (using the sqlw_mail script)
+
+=back
+
 This generates HTML (and non-HTML) reports from an SQLite database,
 taking care of the query-building and the report formatting.  This also
 has methods for adding and updating the database.
 
-Reports can have nested headers which depend on the sort-order given.  One
-can select the columns and order in which the values are displayed.
-The HTML page generated can be customized with templates.
-
 The L<SQLite::Work::CGI> module has extra methods which deal with CGI using
 the CGI module; the included "show.cgi" and "edit.cgi" are demonstration
-CGI scripts which use the SQLite::Work::CGI module.
+CGI scripts which use the SQLite::Work::CGI module.  There is also the
+"show.epl" demonstration Embperl script which has the necessary alterations
+for using this with Embperl.
 
 The L<sqlreport> script uses SQLite::Work to generate reports from the
 command-line.
+
+The L<sqlw_mail> script uses SQLite::Work::Mail to email reports.
 
 =head2 Limitations
 
@@ -1797,17 +1880,19 @@ EOT
     $out =~ s/<!--sqlr_title-->/$title/g;
     $out =~ s/<!--sqlr_contents-->/$contents/g;
     # Now print the page for the user to see...
-    if (!$args{outfile} 
+    if (!defined $args{outfile} 
+	or $args{outfile} eq ''
 	or $args{outfile} eq '-')
     {
 	print $out;
     }
     else
     {
-	open(OUTFILE, ">", $args{outfile})
+	my $fh;
+	open($fh, ">", $args{outfile})
 	    or die "Could not open $args{outfile} for writing";
-	print OUTFILE $out;
-	close(OUTFILE);
+	print $fh $out;
+	close($fh);
     }
 } # print_select
 
@@ -2094,7 +2179,8 @@ sub format_report {
 	$thead .= "</tr></thead>\n";
     }
 
-    my $page = ($args{num_pages} > 1 ? $args{page} : 0);
+    my $page = ((defined $args{num_pages} and $args{num_pages} > 1)
+	? $args{page} : 0);
     # process the rows
     my $new_section = 1;
     my $row_hash;

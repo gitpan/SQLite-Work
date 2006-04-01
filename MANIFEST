@@ -8,6 +8,7 @@ README
 TODO
 edit.cgi
 show.cgi
+show.epl
 lib/SQLite/Work.pm
 lib/SQLite/Work/CGI.pm
 lib/SQLite/Work/Template.pm
@@ -18,6 +19,7 @@ scripts/sqlw_import
 t/00_dist.t
 t/01_load.t
 t/20tfiles.t
+t/30scalar.t
 t/pod-coverage.t
 t/pod.t
 tfiles/test1.args
