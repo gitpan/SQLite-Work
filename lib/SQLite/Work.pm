@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.05> of SQLite::Work.
+This describes version B<0.0501> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.0501';
 
 =head1 SYNOPSIS
 
@@ -785,7 +785,7 @@ sub do_multi_page_report {
     if ($prev_file and $next_file)
     {
 	$ind_contents .= "<hr/>\n";
-	$ind_contents .= "<p><a href=\"$prev_file\">$prev_label</a>&nbsp;<a href=\"$next_file\">$next_label</a></p>\n";
+	$ind_contents .= "<p><a href=\"$prev_file\">$prev_label</a> <a href=\"$next_file\">$next_label</a></p>\n";
     }
     elsif ($prev_file)
     {
@@ -1862,7 +1862,7 @@ EOT
     if ($prev_file and $next_file)
     {
 	push @result, "<hr/>\n";
-	push @result, "<p><a href=\"$prev_file\">$prev_label</a>&nbsp;<a href=\"$next_file\">$next_label</a></p>\n";
+	push @result, "<p><a href=\"$prev_file\">$prev_label</a> <a href=\"$next_file\">$next_label</a></p>\n";
     }
     elsif ($prev_file)
     {

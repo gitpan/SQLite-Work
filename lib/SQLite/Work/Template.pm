@@ -8,11 +8,11 @@ SQLite::Work::Template - template stuff for SQLite::Work.
 
 =head1 VERSION
 
-This describes version B<0.05> of SQLite::Work::Template.
+This describes version B<0.0501> of SQLite::Work::Template.
 
 =cut
 
-our $VERSION = '0.05';
+our $VERSION = '0.0501';
 
 =head1 SYNOPSIS
 
