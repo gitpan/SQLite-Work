@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.0501> of SQLite::Work::CGI.
+This describes version B<0.07> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.0501';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -140,7 +140,7 @@ sub new {
     bless ($self, ref ($class) || $class);
 } # new
 
-=head1 CLASS METHODS
+=head1 OBJECT METHODS
 
 =head2 do_select
 
@@ -1298,8 +1298,9 @@ sub make_edit_table {
     my $tbl_ary_ref = $sth->fetchall_arrayref;
     my $single_row = (@{$tbl_ary_ref} == 1);
     my $new_table = 1;
-    if ($single_row) {
-	my @row = @{$tbl_ary_ref->[0]};
+    for (my $ri = 0; $ri < @{$tbl_ary_ref}; $ri++)
+    {
+	my @row = @{$tbl_ary_ref->[$ri]};
 	$count++;
 	# new table
 	push @out,<<EOT;
@@ -1353,8 +1354,10 @@ EOT
 		push @out, "</tr>\n";
 	    }
 	}
+	push @out, "</table>\n";
+	push @out, "</form>\n";
     }
-    else
+    if (0)
     {
 	for (my $ri = 0; $ri < @{$tbl_ary_ref}; $ri++)
 	{
@@ -1414,8 +1417,6 @@ EOT
 	    $count++;
 	} # for each row
     }
-    push @out, "</table>\n";
-    push @out, "</form>\n";
 
     my $out_str = join('', @out);
     return ($count, $out_str);

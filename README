@@ -6,7 +6,7 @@ SQLite::Work - report on and update an SQLite database.
 
 ==== VERSION ====
 
-This describes version ``0.0501'' of SQLite::Work.
+This describes version ``0.07'' of SQLite::Work.
 
 
 ==== DESCRIPTION ====
@@ -36,7 +36,7 @@ simple formatting for column values, for example:
     month names
     truncation
 
-(see SQLite::Work::Template)
+(see Text::SwiftTemplate)
 
 *
 one can select the columns and their order even if one isn't using templates

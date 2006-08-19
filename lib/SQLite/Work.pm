@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.0501> of SQLite::Work.
+This describes version B<0.07> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.0501';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -73,7 +73,7 @@ some simple formatting for column values, for example:
     month names
     truncation
 
-(see L<SQLite::Work::Template>)
+(see L<Text::SwiftTemplate>)
 
 =item *
 
@@ -149,7 +149,7 @@ This only deals with one database at a time.
 
 use DBI;
 use POSIX;
-use SQLite::Work::Template;
+use Text::SwiftTemplate;
 
 =head1 CLASS METHODS
 
@@ -248,7 +248,7 @@ possible to know beforehand what sort of row_template is needed.
 
 This contains an array of package names of packages to "use".
 This is mainly so that the {&funcname())} construct of
-the templates (see L<SQLite::Work::Template>) can call
+the templates (see L<Text::SwiftTemplate>) can call
 functions within these packages (using their fully-qualified
 names).
 
@@ -301,7 +301,7 @@ EOT
 	    die "invalid use $pkg: $@" if $@;
 	}
     }
-    $self->{_tobj} = SQLite::Work::Template->new();
+    $self->{_tobj} = Text::SwiftTemplate->new(escape_html=>1);
 
     return ($self);
 } # new
@@ -740,6 +740,11 @@ sub do_multi_page_report {
 
     # stuff for the index page
     my $title_main = ($args{title} ? $args{title} : $args{table});
+    # fix up random ampersands
+    if ($title_main =~ / & /)
+    {
+	$title_main =~ s/ & / &amp; /g;
+    }
     my $ind_contents;
     $ind_contents = "<ul>";
 
@@ -780,8 +785,10 @@ sub do_multi_page_report {
     # append the prev-next links, if any
     my $prev_file = $args{prev_file};
     my $prev_label = $args{prev_label};
+    $prev_label =~ s/ & / &amp; /g;
     my $next_file = $args{next_file};
     my $next_label = $args{next_label};
+    $next_label =~ s/ & / &amp; /g;
     if ($prev_file and $next_file)
     {
 	$ind_contents .= "<hr/>\n";
@@ -993,23 +1000,33 @@ sub do_split_report {
 	{
 	    $where{$split_col} = $val;
 	}
+	my $prev_label = "&lt; $prev_niceval";
+	$prev_label =~ s/ & / &amp; /g;
+	my $next_label = "$next_niceval -&gt;";
+	$next_label =~ s/ & / &amp; /g;
 	if ($self->do_multi_page_report(%args,
 	    outfile=>$outfile,
 	    prev_file=>$prev_file,
-	    prev_label=>"&lt;- $prev_niceval",
+	    prev_label=>$prev_label,
 	    next_file=>$next_file,
-	    next_label=>"$next_niceval -&gt;",
+	    next_label=>$next_label,
 	    where=>\%where,
 	    title=>"$split_col: $niceval"))
 	{
 	    print STDERR "$outfile\n" if $args{verbose};
 	    if ($val)
 	    {
-		$page_links{$val} = "<a href='$outfile'>$val</a>\n";
+		my $label = $val;
 		if ($niceval ne $val)
 		{
-		    $page_links{$niceval} = "<a href='$outfile'>$niceval</a>\n";
+		    $label = $niceval;
 		}
+		if ($label =~ / & /)
+		{
+		    # filter out some HTML stuff
+		    $label =~ s/ & / &amp; /g;
+		}
+		$page_links{$val} = "<a href='$outfile'>$label</a>\n";
 	    }
 	    else
 	    {
@@ -1817,6 +1834,11 @@ sub print_select {
 	: "$table $args{command} result");
     my $title = ($args{limit} ? "$main_title ($page)"
 	: $main_title);
+    # fix up random apersands
+    if ($title =~ / & /)
+    {
+	$title =~ s/ & / &amp; /g;
+    }
     my @result = ();
     push @result, $res_tab;
     push @result, "<p>$count rows displayed of $args{total}.</p>\n"
@@ -2195,10 +2217,10 @@ sub format_report {
 	    {
 		my $hval = $headers[$hi];
 		$hval = '' if !$hval;
-		$hval =~ s/{([^}]+)}/$self->{_tobj}->fill_in(row_hash=>$row_hash,targ=>$1)/eg;
+		$hval =~ s/{([^}]+)}/$self->{_tobj}->do_replace(data_hash=>$row_hash,targ=>$1)/eg;
 		my $gval = $groups[$hi];
 		$gval = '' if !$gval;
-		$gval =~ s/{([^}]+)}/$self->{_tobj}->fill_in(row_hash=>$row_hash,targ=>$1)/eg;
+		$gval =~ s/{([^}]+)}/$self->{_tobj}->do_replace(data_hash=>$row_hash,targ=>$1)/eg;
 		if ($hval
 		    and $hval ne $prev_head{$hi})
 		{
@@ -2229,7 +2251,7 @@ sub format_report {
 	    $new_section = 0;
 	}
 	my $rowstr = $row_template;
-	$rowstr =~ s/{([^}]+)}/$self->{_tobj}->fill_in(row_hash=>$row_hash,show_cols=>\%show_cols,targ=>$1)/eg;
+	$rowstr =~ s/{([^}]+)}/$self->{_tobj}->do_replace(data_hash=>$row_hash,show_names=>\%show_cols,targ=>$1)/eg;
 	push @out, $rowstr;
 	$count++;
     } # for each row

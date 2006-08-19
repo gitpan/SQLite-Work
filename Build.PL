@@ -8,7 +8,7 @@ my $builder = Module::Build->new(
     dist_author         => 'Kathryn Andersen',
     dist_version_from   => 'lib/SQLite/Work.pm',
 	requires            => {
-	     # module requirements here
+	'Text::SwiftTemplate' => 0.07,
 	'Getopt::Long' => 2.34,
 	'Pod::Usage' => 0,
 	'Getopt::ArgvFile' => 1.10,

@@ -11,7 +11,6 @@ show.cgi
 show.epl
 lib/SQLite/Work.pm
 lib/SQLite/Work/CGI.pm
-lib/SQLite/Work/Template.pm
 lib/SQLite/Work/Mail.pm
 scripts/sqlreport
 scripts/sqlw_mail

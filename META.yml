@@ -1,10 +1,12 @@
 ---
 name: SQLite-Work
-version: 0.0501
+version: 0.07
 author:
   - Kathryn Andersen
 abstract: report on and update an SQLite database.
 license: perl
+resources:
+  license: http://dev.perl.org/licenses/
 requires:
   CGI: 3.1
   DBD::SQLite: 0
@@ -14,19 +16,20 @@ requires:
   Getopt::Long: 2.34
   POSIX: 0
   Pod::Usage: 0
+  Text::SwiftTemplate: 0.07
 build_requires:
   Test::More: 0
 provides:
   SQLite::Work:
     file: lib/SQLite/Work.pm
-    version: 0.0501
+    version: 0.07
   SQLite::Work::CGI:
     file: lib/SQLite/Work/CGI.pm
-    version: 0.0501
+    version: 0.07
   SQLite::Work::Mail:
     file: lib/SQLite/Work/Mail.pm
-    version: 0.0501
-  SQLite::Work::Template:
-    file: lib/SQLite/Work/Template.pm
-    version: 0.0501
-generated_by: Module::Build version 0.2611
+    version: 0.07
+generated_by: Module::Build version 0.28
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.2.html
+  version: 1.2

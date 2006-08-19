@@ -10,11 +10,11 @@ sqlreport - make reports on a table in an SQLite database
 
 =head1 VERSION
 
-This describes version B<0.0501> of sqlreport.
+This describes version B<0.07> of sqlreport.
 
 =cut
 
-our $VERSION = '0.0501';
+our $VERSION = '0.07';
 
 =head1 SYNOPSIS
 
@@ -22,6 +22,7 @@ sqlreport --help | --manpage | --version
 
 sqlreport [ --all_pages ] --database I<database_file>
 [ --distinct ] { --groups I<template> } { --headers I<template> }
+[ --index_template I<template> ]
 [ --layout I<string> ] [ --limit I<number> ]
 { --not_where I<colname>=1 } [ --outfile I<filename> ]
 [ --page I<number> ] [ --report_style I<string> ]
@@ -394,6 +395,7 @@ sub process_args ($) {
 	       'distinct!',
 	       'row_ids=s%',
 	       'report_template=s',
+	       'index_template=s',
 	       'table=s',
 	       'where=s%',
 	       'not_where=s%',
@@ -429,7 +431,7 @@ sub process_args ($) {
     }
     # set the parameters for 'new'
     $data_ref->{new_params} = {};
-    foreach my $key (qw(database row_ids report_template use_package))
+    foreach my $key (qw(database row_ids report_template index_template use_package))
     {
 	if (exists $data_ref->{args}->{$key})
 	{
