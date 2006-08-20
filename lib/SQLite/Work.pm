@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.07> of SQLite::Work.
+This describes version B<0.08> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
@@ -73,7 +73,7 @@ some simple formatting for column values, for example:
     month names
     truncation
 
-(see L<Text::SwiftTemplate>)
+(see L<Text::NeatTemplate>)
 
 =item *
 
@@ -149,7 +149,7 @@ This only deals with one database at a time.
 
 use DBI;
 use POSIX;
-use Text::SwiftTemplate;
+use Text::NeatTemplate;
 
 =head1 CLASS METHODS
 
@@ -248,7 +248,7 @@ possible to know beforehand what sort of row_template is needed.
 
 This contains an array of package names of packages to "use".
 This is mainly so that the {&funcname())} construct of
-the templates (see L<Text::SwiftTemplate>) can call
+the templates (see L<Text::NeatTemplate>) can call
 functions within these packages (using their fully-qualified
 names).
 
@@ -301,7 +301,7 @@ EOT
 	    die "invalid use $pkg: $@" if $@;
 	}
     }
-    $self->{_tobj} = Text::SwiftTemplate->new(escape_html=>1);
+    $self->{_tobj} = Text::NeatTemplate->new(escape_html=>1);
 
     return ($self);
 } # new

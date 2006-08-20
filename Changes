@@ -1,6 +1,12 @@
 Revision history for SQLite-Work
 ================================
 
+0.08 Mon 21 August 2006
+-----------------------
+
+  * (21 Aug 2006) renaming template module
+  	Changed Text::SwiftTemplate to Text::NeatTemplate.
+
 0.07 Sat 19 August 2006
 -----------------------
 

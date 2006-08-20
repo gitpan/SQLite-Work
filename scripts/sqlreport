@@ -10,11 +10,11 @@ sqlreport - make reports on a table in an SQLite database
 
 =head1 VERSION
 
-This describes version B<0.07> of sqlreport.
+This describes version B<0.08> of sqlreport.
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 

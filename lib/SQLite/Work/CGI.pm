@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.07> of SQLite::Work::CGI.
+This describes version B<0.08> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 =head1 SYNOPSIS
 
