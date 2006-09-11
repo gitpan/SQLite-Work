@@ -10,11 +10,11 @@ sqlreport - make reports on a table in an SQLite database
 
 =head1 VERSION
 
-This describes version B<0.08> of sqlreport.
+This describes version B<0.09> of sqlreport.
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -23,7 +23,7 @@ sqlreport --help | --manpage | --version
 sqlreport [ --all_pages ] --database I<database_file>
 [ --distinct ] { --groups I<template> } { --headers I<template> }
 [ --index_template I<template> ]
-[ --layout I<string> ] [ --limit I<number> ]
+[ --layout I<string> ] [ --limit I<number> ] [ --link_suffix I<string> ]
 { --not_where I<colname>=1 } [ --outfile I<filename> ]
 [ --page I<number> ] [ --report_style I<string> ]
 { --row_ids I<table>=I<colname> } [ --report_template I<template> ]
@@ -171,6 +171,18 @@ of values, one on each line.
 
 The maximum number of rows to display per page.  If this is zero,
 then all rows are displayed in one page.
+
+=item --link_suffix I<string>
+
+The 'link_suffix' argument, if given, overrides the suffix given
+in links to the other pages in a multi-page report; this is useful
+if you're post-processing the files (and thus changing their extensions)
+or are using something like Apache MultiViews to eliminate the need for
+extensions in links.
+
+    --link_suffix '.shtml'
+
+    --link_suffix ''
 
 =item --manpage
 
@@ -371,6 +383,7 @@ sub init_data ($) {
     $data_ref->{args}->{manpage} = 0;
     $data_ref->{args}->{verbose} = 0;
     $data_ref->{args}->{debug} = 0;
+    $data_ref->{args}->{link_suffix} = undef;
 } # init_data
 
 sub process_args ($) {
@@ -420,6 +433,7 @@ sub process_args ($) {
 	       'split_col=s',
 	       'split_alpha=n',
 	       'use_package=s@',
+	       'link_suffix=s',
 	      ) or pod2usage(2);
 
     if ($data_ref->{'manpage'})
@@ -467,7 +481,7 @@ sub process_args ($) {
 
     # set the parameters for 'report'
     $data_ref->{report_params} = {};
-    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed show headers groups limit page report_style layout table_border table_header truncate_colnames row_template outfile split_col split_alpha debug))
+    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed show headers groups limit page report_style layout link_suffix table_border table_header truncate_colnames row_template outfile split_col split_alpha debug))
     {
 	if (exists $data_ref->{args}->{$key})
 	{

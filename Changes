@@ -1,6 +1,13 @@
 Revision history for SQLite-Work
 ================================
 
+0.09 Sat 09 September 2006
+--------------------------
+
+  * (9 Sep 2006) link_suffix
+  	Added the --link_suffix argument, to change the suffix used
+  in multi-page reports.
+
 0.08 Mon 21 August 2006
 -----------------------
 

@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.08> of SQLite::Work.
+This describes version B<0.09> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.08';
+our $VERSION = '0.09';
 
 =head1 SYNOPSIS
 
@@ -662,6 +662,7 @@ sub do_report {
 	table_border=>1,
 	truncate_colnames=>0,
 	report_style=>'full',
+	link_suffix=>'.html',
     );
 
 Select data from a table in the database, and make a HTML
@@ -677,6 +678,12 @@ Otherwise, it uses the 'outfile' name as a base upon which to build the
 file-names for all pages in the report (basically appending the
 page-number to the name), and generates a report file for each of them,
 and an index-page file which is called the 'outfile' value.
+
+The 'link_suffix' argument, if given, overrides the suffix given
+in links to the other pages in this multi-page report; this is useful
+if you're post-processing the files (and thus changing their extensions)
+or are using something like Apache MultiViews to eliminate the need for
+extensions in links.
 
 See L<do_report> for information about the rest of the arguments.
 
@@ -706,6 +713,7 @@ sub do_multi_page_report {
 	prev_label=>'',
 	next_file=>'',
 	next_label=>'',
+	link_suffix=>undef,
 	@_
     );
     
@@ -730,9 +738,11 @@ sub do_multi_page_report {
     }
     print STDERR "About to generate $num_pages PAGES\n" if $args{verbose};
     # split the outfile into prefix and suffix
-    $args{outfile} =~ m#(.*)\.(\w+)$#;
+    $args{outfile} =~ m#(.*)(\.\w+)$#;
     my $outfile_prefix = $1;
-    my $outfile_suffix = ($2 ? $2 : 'html');
+    my $outfile_suffix = ($2 ? $2 : '.html');
+    my $link_suffix = (defined $args{link_suffix} ? $args{link_suffix}
+	: $outfile_suffix);
     # width of the page-id
     my $digits = ($num_pages < 10 ? 1
 	: ($num_pages < 100 ? 2 : 3)
@@ -751,20 +761,22 @@ sub do_multi_page_report {
     # make a report for each page
     for (my $page = 1; $page <= $num_pages; $page++)
     {
-	my $outfile = sprintf("%s_%0*d.%s",
+	my $outfile = sprintf("%s_%0*d%s",
 	    $outfile_prefix, $digits, $page, $outfile_suffix);
+	my $outfile_link = sprintf("%s_%0*d%s",
+	    $outfile_prefix, $digits, $page, $link_suffix);
 	my $prevfile = ($page > 1
-			? sprintf("%s_%0*d.%s",
+			? sprintf("%s_%0*d%s",
 				  $outfile_prefix, $digits,
-				  $page - 1, $outfile_suffix)
+				  $page - 1, $link_suffix)
 			: $args{outfile});
 	my $prevlabel = ($page > 1
 			? sprintf("%s (%d)", $title_main, $page - 1)
 			: sprintf("%s Index", $title_main));
 	my $nextfile = ($page < $num_pages
-			? sprintf("%s_%0*d.%s",
+			? sprintf("%s_%0*d%s",
 				  $outfile_prefix, $digits,
-				  $page + 1, $outfile_suffix)
+				  $page + 1, $link_suffix)
 			: $args{next_file});
 	my $nextlabel = ($page < $num_pages
 			? sprintf("%s (%d)", $title_main, $page + 1)
@@ -778,7 +790,7 @@ sub do_multi_page_report {
 	    page=>$page);
 	print STDERR "$outfile\n" if $args{verbose};
 	$ind_contents .=
-	    "<li><a href='$outfile'>$title_main ($page)</a></li>\n";
+	    "<li><a href='$outfile_link'>$title_main ($page)</a></li>\n";
     }
     $ind_contents .= "</ul>\n";
 
@@ -842,6 +854,7 @@ sub do_multi_page_report {
 	table_border=>1,
 	truncate_colnames=>0,
 	report_style=>'full',
+	link_suffix=>'.html',
     );
 
 Build up a multi-file report, splitting it into different pages for each
@@ -859,6 +872,12 @@ splitting on each distinct value in the 'split_col' column, the
 split is done by the truncated values of that column; if 'split_alpha'
 is 1, then the split is by the first letter, if it is 2, by the first
 two letters, and so on.
+
+The 'link_suffix' argument, if given, overrides the suffix given
+in links to the other pages in this multi-page report; this is useful
+if you're post-processing the files (and thus changing their extensions)
+or are using something like Apache MultiViews to eliminate the need for
+extensions in links.
 
 See L<do_report> for information about the rest of the arguments.
 
@@ -887,6 +906,7 @@ sub do_split_report {
 	title=>'',
 	verbose=>0,
 	debug=>0,
+	link_suffix=>undef,
 	@_
     );
     
@@ -900,13 +920,15 @@ sub do_split_report {
 
     # split the outfile into prefix and suffix
     my $outfile_prefix = '';
-    my $outfile_suffix = 'html';
+    my $outfile_suffix = '.html';
     if ($args{outfile})
     {
-	$args{outfile} =~ m#(.*)\.(\w+)$#;
+	$args{outfile} =~ m#(.*)(\.\w+)$#;
 	$outfile_prefix = $1;
-	$outfile_suffix = ($2 ? $2 : 'html');
+	$outfile_suffix = ($2 ? $2 : '.html');
     }
+    my $link_suffix = (defined $args{link_suffix} ? $args{link_suffix}
+	: $outfile_suffix);
 
     my $total = $self->get_total_matching(%args);
     my @split_vals = $self->get_distinct_col(%args,
@@ -945,8 +967,10 @@ sub do_split_report {
 
 	my $valbase = $self->{_tobj}->convert_value(value=>$niceval,
 	    format=>'namedalpha', name=>$split_col);
-	my $outfile = sprintf("%s%s.%s",
+	my $outfile = sprintf("%s%s%s",
 	    $outfile_prefix, $valbase, $outfile_suffix);
+	my $outfile_link = sprintf("%s%s%s",
+	    $outfile_prefix, $valbase, $link_suffix);
 
 	# previous values
 	my $prev_val = '';
@@ -964,9 +988,9 @@ sub do_split_report {
 	    my $prev_valbase = $self->{_tobj}->convert_value(value=>$prev_niceval,
 						    format=>'namedalpha',
 						    name=>$split_col);
-	    $prev_file = sprintf("%s%s.%s",
+	    $prev_file = sprintf("%s%s%s",
 				 $outfile_prefix,
-				 $prev_valbase, $outfile_suffix);
+				 $prev_valbase, $link_suffix);
 	}
 
 	# next values
@@ -985,10 +1009,10 @@ sub do_split_report {
 	    my $next_valbase = $self->{_tobj}->convert_value(value=>$next_niceval,
 						    format=>'namedalpha',
 						    name=>$split_col);
-	    $next_file = sprintf("%s%s.%s",
+	    $next_file = sprintf("%s%s%s",
 				 $outfile_prefix,
 				 $next_valbase,
-				 $outfile_suffix);
+				 $link_suffix);
 	}
 
 	if ($val and $args{split_alpha})
@@ -1026,11 +1050,11 @@ sub do_split_report {
 		    # filter out some HTML stuff
 		    $label =~ s/ & / &amp; /g;
 		}
-		$page_links{$val} = "<a href='$outfile'>$label</a>\n";
+		$page_links{$val} = "<a href='$outfile_link'>$label</a>\n";
 	    }
 	    else
 	    {
-		$page_links{''} = "<a href='$outfile'>$split_col (none)</a>\n";
+		$page_links{''} = "<a href='$outfile_link'>$split_col (none)</a>\n";
 	    }
 	}
     }
@@ -1093,7 +1117,7 @@ sub do_split_report {
     $self->{index_template} = $out;
     $out =~ s/<!--sqlr_title-->/$title_main Index/g;
     $out =~ s/<!--sqlr_contents-->/$ind_contents/g;
-    my $index_file = sprintf("%s%s.%s",
+    my $index_file = sprintf("%s%s%s",
 			  $outfile_prefix, $split_col, $outfile_suffix);
     my $fh;
     open($fh, ">", $index_file)
@@ -2290,7 +2314,7 @@ sub get_row_template {
 
     my $row_template = $args{row_template};
     # read in the file if it's a file
-    if (-r $row_template)
+    if ($row_template !~ /\n/ && -r $row_template)
     {
 	my $fh;
 	open($fh, $row_template)
