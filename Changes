@@ -1,6 +1,19 @@
 Revision history for SQLite-Work
 ================================
 
+0.10 Thu 21 June 2007
+---------------------
+
+  * (21 Jun 2007) force_show_cols
+  	New option, force_show_cols, which overrides the default setting
+  that if a column has appeared in a header, it won't appear in a row.
+  This can be useful if one has a header which is just the first letter
+  of a column value, and one still wants the full column value later.
+
+  * (29 Sep 2006) bug fixes
+  - the SQLite::Work::Mail module had the wrong usage for the templating
+  - the edit.cgi and show.cgi examples had error in the InitArgs.
+
 0.09 Sat 09 September 2006
 --------------------------
 

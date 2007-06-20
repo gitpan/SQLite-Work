@@ -38,9 +38,9 @@ about possible arguments to give.
 
 =cut
 
-our %InitArgs = {
+our %InitArgs = (
     database=>'test1.db',
-};
+);
 
 =head2 Author
 

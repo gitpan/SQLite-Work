@@ -8,11 +8,11 @@ SQLite::Work::Mail - send mail with data from an SQLite table.
 
 =head1 VERSION
 
-This describes version B<0.09> of SQLite::Work::Mail.
+This describes version B<0.10> of SQLite::Work::Mail.
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -32,6 +32,7 @@ an SQLite database.
 
 use File::Temp qw(tmpnam);
 use SQLite::Work;
+use Text::NeatTemplate;
 
 our @ISA = qw(SQLite::Work);
 
@@ -292,7 +293,7 @@ sub send_one_email ($%) {
     open(OUTFILE, ">$outfile") || die "Can't open '$outfile' for writing.";
 
     my $rowstr = $row_template;
-    $rowstr =~ s/{([^}]+)}/$self->{_tobj}->fill_in(row_hash=>$row_hash,show_cols=>\%show_cols,targ=>$1)/eg;
+    $rowstr =~ s/{([^}]+)}/$self->{_tobj}->do_replace(data_hash=>$row_hash,show_names=>\%show_cols,targ=>$1)/eg;
     print OUTFILE $rowstr;
 
     close(OUTFILE);
@@ -302,7 +303,7 @@ sub send_one_email ($%) {
     }
 
     my $subject = $args{subject};
-    $subject =~ s/{([^}]+)}/$self->{_tobj}->fill_in(row_hash=>$row_hash,show_cols=>\%show_cols,targ=>$1)/eg;
+    $subject =~ s/{([^}]+)}/$self->{_tobj}->do_replace(data_hash=>$row_hash,show_names=>\%show_cols,targ=>$1)/eg;
     
     if ($args{'debug'})
     {

@@ -25,9 +25,9 @@ about possible arguments to give.
 
 =cut
 
-%InitArgs = {
+%InitArgs = (
     database=>'test1.db',
-};
+);
 
 =head2 Author
 

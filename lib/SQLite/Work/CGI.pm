@@ -8,11 +8,11 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-This describes version B<0.09> of SQLite::Work::CGI.
+This describes version B<0.10> of SQLite::Work::CGI.
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -1189,9 +1189,13 @@ sub format_report {
     {
 	return $self->SUPER::format_report($sth, %args);
     }
-    else
+    elsif ($args{command} eq 'Edit')
     {
 	return $self->make_edit_table($sth, %args);
+    }
+    elsif ($args{command} eq 'EditText')
+    {
+	return $self->make_edittext($sth, %args);
     }
 
 } # format_report
@@ -1421,6 +1425,192 @@ EOT
     my $out_str = join('', @out);
     return ($count, $out_str);
 } # make_edit_table
+
+=head2 make_edittext
+
+Make a textarea for editing a search result.
+
+=cut
+sub make_edittext {
+    my $self = shift;
+    my $sth = shift;
+    my %args = (
+	table=>'',
+	command=>'EditText',
+	report_style=>'full',
+	@_
+    );
+    my @columns = @{$args{columns}};
+    my @sort_by = @{$args{sort_by}};
+    my $command = $args{command};
+    my $table = $args{table};
+    my $table2 = $args{table2};
+    my $report_style = $args{report_style};
+    my $table_border = $args{table_border};
+
+    # change things depending on report_style
+    if (!defined $table_border)
+    {
+	if ($report_style eq 'bare')
+	{
+	    $table_border = 0;
+	}
+	else
+	{
+	    $table_border = 1;
+	}
+    }
+    my @out = ();
+    my $count = 0;
+    my $row_id_name = $self->get_id_colname($table);
+    my $row_id_ind = -1;
+    my $url = $self->{cgi}->url();
+    # by default, show all columns
+    my @show_cols = ();
+    for (my $i = 0; $i < @columns; $i++)
+    {
+	$show_cols[$i] = 1;
+	if ($columns[$i] eq $row_id_name)
+	{
+	    $row_id_ind = $i;
+	}
+    }
+
+    # no change or truncation of colnames
+    my @nice_cols = ();
+    for (my $ci = 0; $ci < @columns; $ci++)
+    {
+	my $nicecol = $columns[$ci];
+	$nice_cols[$ci] = $nicecol;
+    }
+
+    # get the rows
+    my $tbl_ary_ref = $sth->fetchall_arrayref;
+    my $single_row = (@{$tbl_ary_ref} == 1);
+    my $new_table = 1;
+    for (my $ri = 0; $ri < @{$tbl_ary_ref}; $ri++)
+    {
+	my @row = @{$tbl_ary_ref->[$ri]};
+	$count++;
+	# new table
+	push @out,<<EOT;
+<form action="$url">
+<input type="hidden" name="Table" value="$table"/>
+EOT
+	if ($table2)
+	{
+	    push @out,<<EOT;
+<input type="hidden" name="Table2" value="$table2"/>
+EOT
+	}
+	push @out, "<table border='$table_border' class='plain'>";
+	if ($report_style ne 'bare')
+	{
+	    push @out, '<thead><tr>';
+	    # a single-row table has its columns on the side
+	    push @out, "<th>Column</th><th>Value</th>\n";
+	    push @out, "</tr></thead>\n";
+	}
+
+	# a row for each column-value
+	for (my $ci = 0; $ci < @columns; $ci++)
+	{
+	    if ($show_cols[$ci])
+	    {
+		my $col = $columns[$ci];
+		my $val = $row[$ci];
+		$val = 'NULL' if !defined $val;
+		push @out, '<tr>';
+		push @out, '<td><strong>';
+		push @out, "<input type='submit' name='Update' value='$col'/>";
+		push @out, "</strong></td>\n";
+		push @out, '<td>';
+		if ($col ne $row_id_name)
+		{
+		    push @out,$self->get_input_field(table=>$table,
+			colname=>$col,
+			value=>$val);
+		}
+		else
+		{
+		    push @out,<<EOT;
+<input type="hidden" size="50" name="$col" value="$val"/>
+$val
+<input type="submit" name="Delete" value="Delete"/>
+<input type="submit" name="Add" value="Add"/>
+EOT
+		}
+		push @out, '</td>';
+		push @out, "</tr>\n";
+	    }
+	}
+	push @out, "</table>\n";
+	push @out, "</form>\n";
+    }
+    if (0)
+    {
+	for (my $ri = 0; $ri < @{$tbl_ary_ref}; $ri++)
+	{
+	    my @row = @{$tbl_ary_ref->[$ri]};
+	    if ($new_table)
+	    {
+		push @out,<<EOT;
+<form action="$url">
+<input type="hidden" name="Table" value="$table"/>
+EOT
+		if ($table2)
+		{
+		    push @out,<<EOT;
+<input type="hidden" name="Table2" value="$table2"/>
+EOT
+		}
+		push @out, "<table border=\"$table_border\" class=\"plain\">";
+		if ($report_style ne 'bare')
+		{
+		    push @out, '<thead><tr>';
+		    push @out, "<th>&nbsp;</th>";
+		    for (my $ci = 0; $ci < @columns; $ci++)
+		    {
+			if ($show_cols[$ci])
+			{
+			    my $nicecol = $nice_cols[$ci];
+			    push @out, "<th>$nicecol</th>";
+			}
+		    }
+		    push @out, "</tr></thead>\n";
+		}
+		$new_table = 0;
+	    }
+	    push @out, "<tr>";
+	    my $row_id_val = 'UNKNOWN';
+	    $row_id_val = $row[$row_id_ind] if ($row_id_ind >= 0);
+	    push @out,<<EOT;
+<td><input type="submit" name="Edit_Row" value="Edit Row $row_id_val"/>
+<!-- row_id_ind=$row_id_ind -->
+<input type="submit" name="Add_Row" value="Add Row"/>
+<input type="submit" name="Delete_Row" value="Delete Row $row_id_val"/>
+</td>
+EOT
+	    for (my $ci = 0; $ci < @columns; $ci++)
+	    {
+		if ($show_cols[$ci])
+		{
+		    my $col = $columns[$ci];
+		    my $val = $row[$ci];
+		    $val = 'NULL' if !defined $val;
+		    push @out, '<td>';
+		    push @out, ($val ? $val : '&nbsp');
+		    push @out, "</td>\n";
+		}
+	    }
+	    push @out, "</tr>\n";
+	    $count++;
+	} # for each row
+    }
+
+    my $out_str = join('', @out);
+    return ($count, $out_str);
+} # make_edittext
 
 =head2 get_input_field
 

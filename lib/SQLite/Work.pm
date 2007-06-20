@@ -8,11 +8,11 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-This describes version B<0.09> of SQLite::Work.
+This describes version B<0.10> of SQLite::Work.
 
 =cut
 
-our $VERSION = '0.09';
+our $VERSION = '0.10';
 
 =head1 SYNOPSIS
 
@@ -2073,6 +2073,7 @@ $my report = $self->format_report(
 	table=>$table,
 	command=>'Search',
 	columns=>\@columns,
+	force_show_cols=>\%force_show_cols,
 	sort_by=>\@sort_by,
 	headers=>\@headers,
 	table2=>$table2,
@@ -2097,12 +2098,14 @@ sub format_report {
 	row_template=>'',
 	report_style=>'full',
 	table_header=>'',
+	force_show_cols=>{},
 	@_
     );
     my @columns = @{$args{columns}};
     my @sort_by = @{$args{sort_by}};
     my @headers = @{$args{headers}};
     my @groups = @{$args{groups}};
+    my %force_show_cols = %{$args{force_show_cols}};
     my $command = $args{command};
     my $table = $args{table};
     my $table2 = $args{table2};
@@ -2183,7 +2186,7 @@ sub format_report {
 	}
 	for my $col (@columns)
 	{
-	    if ($in_header{$col})
+	    if ($in_header{$col} && !$force_show_cols{$col})
 	    {
 		$show_cols{$col} = 0;
 	    }
