@@ -1,6 +1,12 @@
 Revision history for SQLite-Work
 ================================
 
+0.1001 Tue 26 June 2007
+-----------------------
+
+  * (26 Jun 2007) fix makefile
+  	Fixed bug with Makefile.PL by changing Build.PL options.
+
 0.10 Thu 21 June 2007
 ---------------------
 

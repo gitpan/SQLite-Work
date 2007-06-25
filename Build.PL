@@ -21,13 +21,9 @@ my $builder = Module::Build->new(
     build_requires => {
         'Test::More' => 0,
     },
-#    add_to_cleanup      => [ 'SQLite-Work-*' ],
+    create_makefile_pl => 'passthrough',
     script_files => [qw(scripts/sqlreport scripts/sqlw_mail scripts/sqlw_import)],
 
 );
 
 $builder->create_build_script();
-# create the Makefile.PL
-use Module::Build::Compat;
-print "creating Makefile.PL\n";
-Module::Build::Compat->create_makefile_pl('passthrough', $builder);
