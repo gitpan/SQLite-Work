@@ -1,6 +1,6 @@
 ---
 name: SQLite-Work
-version: 0.1001
+version: 0.1002
 author:
   - Kathryn Andersen
 abstract: report on and update an SQLite database.
@@ -22,14 +22,14 @@ build_requires:
 provides:
   SQLite::Work:
     file: lib/SQLite/Work.pm
-    version: 0.1001
+    version: 0.1002
   SQLite::Work::CGI:
     file: lib/SQLite/Work/CGI.pm
-    version: 0.1001
+    version: 0.1002
   SQLite::Work::Mail:
     file: lib/SQLite/Work/Mail.pm
-    version: 0.1001
-generated_by: Module::Build version 0.2805
+    version: 0.1002
+generated_by: Module::Build version 0.280801
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.2.html
   version: 1.2
