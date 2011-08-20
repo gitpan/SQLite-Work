@@ -27,4 +27,4 @@ requires:
   POSIX: 0
   Pod::Usage: 0
   Text::NeatTemplate: 0
-version: 0.1003
+version: 0.11

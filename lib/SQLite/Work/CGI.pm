@@ -1,6 +1,6 @@
 package SQLite::Work::CGI;
 BEGIN {
-  $SQLite::Work::CGI::VERSION = '0.1003';
+  $SQLite::Work::CGI::VERSION = '0.11';
 }
 use strict;
 use warnings;
@@ -11,7 +11,7 @@ SQLite::Work::CGI - Report and update a SQLite database using CGI
 
 =head1 VERSION
 
-version 0.1003
+version 0.11
 
 =head1 SYNOPSIS
 

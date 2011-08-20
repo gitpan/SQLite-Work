@@ -1,6 +1,6 @@
 package SQLite::Work;
 BEGIN {
-  $SQLite::Work::VERSION = '0.1003';
+  $SQLite::Work::VERSION = '0.11';
 }
 use strict;
 use warnings;
@@ -11,7 +11,7 @@ SQLite::Work - report on and update an SQLite database.
 
 =head1 VERSION
 
-version 0.1003
+version 0.11
 
 =head1 SYNOPSIS
 
@@ -840,7 +840,7 @@ sub do_multi_page_report {
     # and make the index page
     my $out = $self->get_template($self->{index_template});
     $self->{index_template} = $out;
-    $out =~ s/<!--sqlr_title-->/$title_main Index/g;
+    $out =~ s/<!--sqlr_title-->/$title_main/g;
     $out =~ s/<!--sqlr_contents-->/$ind_contents/g;
     my $fh;
     open($fh, ">", $args{outfile})
@@ -1056,6 +1056,13 @@ sub do_split_report {
 	$prev_label =~ s/ & / &amp; /g;
 	my $next_label = "$next_niceval -&gt;";
 	$next_label =~ s/ & / &amp; /g;
+	my $mtitle = "$split_col: $niceval";
+	if ($args{split_titlefmt})
+	{
+	    $mtitle = $args{split_titlefmt};
+	    $mtitle =~ s/SPLIT_COL/$split_col/g;
+	    $mtitle =~ s/VALUE/$niceval/g;
+	}
 	if ($self->do_multi_page_report(%args,
 	    outfile=>$outfile,
 	    prev_file=>$prev_file,
@@ -1063,7 +1070,7 @@ sub do_split_report {
 	    next_file=>$next_file,
 	    next_label=>$next_label,
 	    where=>\%where,
-	    title=>"$split_col: $niceval"))
+	    title=>$mtitle))
 	{
 	    print STDERR "$outfile\n" if $args{verbose};
 	    if ($val)
@@ -1155,7 +1162,7 @@ sub do_split_report {
     # and make the index page
     my $out = $self->get_template($self->{index_template});
     $self->{index_template} = $out;
-    $out =~ s/<!--sqlr_title-->/$title_main Index/g;
+    $out =~ s/<!--sqlr_title-->/$title_main/g;
     $out =~ s/<!--sqlr_contents-->/$ind_contents/g;
     my $index_file = sprintf("%s%s%s",
 			  $outfile_prefix, $split_col, $outfile_suffix);

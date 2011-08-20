@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 package main;
 BEGIN {
-  $main::VERSION = '0.1003';
+  $main::VERSION = '0.11';
 }
 # vim:ts=8 sw=4 sts=4 ai
 use strict;
@@ -13,7 +13,7 @@ sqlreport - make reports on a table in an SQLite database
 
 =head1 VERSION
 
-version 0.1003
+version 0.11
 
 =head1 SYNOPSIS
 
@@ -447,6 +447,7 @@ sub process_args ($) {
 	       'all_pages!',
 	       'total!',
 	       'split_col=s',
+	       'split_titlefmt=s',
 	       'split_alpha=n',
 	       'use_package=s@',
 	       'link_suffix=s',
@@ -497,7 +498,7 @@ sub process_args ($) {
 
     # set the parameters for 'report'
     $data_ref->{report_params} = {};
-    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed force_show_cols show headers groups limit page report_style layout link_suffix table_border table_header truncate_colnames prev_next_template multi_page_template split_ind_template row_template filename_format outfile split_col split_alpha debug))
+    foreach my $key (qw(verbose title table distinct where not_where sort_by sort_reversed force_show_cols show headers groups limit page report_style layout link_suffix table_border table_header truncate_colnames prev_next_template multi_page_template split_ind_template row_template filename_format outfile split_col split_alpha split_titlefmt debug))
     {
 	if (exists $data_ref->{args}->{$key})
 	{

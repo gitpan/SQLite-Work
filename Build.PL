@@ -21,7 +21,7 @@ my %module_build_args = (
     'Kathryn Andersen'
   ],
   'dist_name' => 'SQLite-Work',
-  'dist_version' => '0.1003',
+  'dist_version' => '0.11',
   'license' => 'perl',
   'module_name' => 'SQLite::Work',
   'recommends' => {},

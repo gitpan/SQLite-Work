@@ -1,6 +1,6 @@
 package SQLite::Work::Mail;
 BEGIN {
-  $SQLite::Work::Mail::VERSION = '0.1003';
+  $SQLite::Work::Mail::VERSION = '0.11';
 }
 use strict;
 use warnings;
@@ -11,7 +11,7 @@ SQLite::Work::Mail - send mail with data from an SQLite table.
 
 =head1 VERSION
 
-version 0.1003
+version 0.11
 
 =head1 SYNOPSIS
 
