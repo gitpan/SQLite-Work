@@ -49,6 +49,7 @@ sub pmver {
 }
 
 eval { $v .= pmver('CGI','any version') };
+eval { $v .= pmver('DBD::SQLite','any version') };
 eval { $v .= pmver('DBI','any version') };
 eval { $v .= pmver('Data::Dumper','any version') };
 eval { $v .= pmver('File::Spec','any version') };
